@@ -11,7 +11,8 @@ from langchain_groq import ChatGroq
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores import Chroma
 
-from langchain.chains import ConversationalRetrievalChain
+from langchain.chains.history_aware_retriever import create_history_aware_retriever
+from langchain.chains.retrieval import create_retrieval_chain
 from langchain.memory import ConversationBufferMemory
 from langchain.prompts import PromptTemplate
 
@@ -113,15 +114,8 @@ Question:
 Answer:"""
     )
 
-    qa_chain = ConversationalRetrievalChain.from_llm(
-        llm=llm,
-        retriever=retriever,
-        memory=memory,
-        condense_question_prompt=condense_question_prompt,
-        combine_docs_chain_kwargs={"prompt": answer_prompt},
-        return_source_documents=True,
-        verbose=False,
-    )
+    history_aware_retriever = create_history_aware_retriever(llm, retriever, condense_question_prompt)
+    qa_chain = create_retrieval_chain(history_aware_retriever, combine_docs_chain_kwargs={"prompt": answer_prompt})
     return qa_chain
 
 
@@ -216,9 +210,9 @@ else:
         # Get answer from chain
         with st.chat_message("assistant"):
             with st.spinner("Thinking..."):
-                result = st.session_state.qa_chain.invoke({"question": user_query})
+                result = st.session_state.qa_chain.invoke({"input": user_query, "chat_history": st.session_state.memory.chat_memory.messages})
                 answer = result["answer"]
-                sources = result.get("source_documents", [])
+                sources = result.get("context", [])
 
                 st.markdown(answer)
 
@@ -239,3 +233,5 @@ else:
 
         # Save assistant message to chat history
         st.session_state.messages.append({"role": "assistant", "content": answer})
+        st.session_state.memory.chat_memory.add_user_message(user_query)
+        st.session_state.memory.chat_memory.add_ai_message(answer)
