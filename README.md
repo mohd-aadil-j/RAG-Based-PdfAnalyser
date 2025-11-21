@@ -1,6 +1,10 @@
 # 📚 Campus Knowledge Assistant
 
+
 A powerful **Retrieval-Augmented Generation (RAG)** system built with LangChain, Groq, and Streamlit that allows you to chat with your PDF documents using advanced AI. Perfect for students, researchers, and professionals who want to extract insights from their documents through natural conversation.
+
+##  Visit 
+ https://ragfriendteacher.streamlit.app/
 
 ## ✨ Features
 
