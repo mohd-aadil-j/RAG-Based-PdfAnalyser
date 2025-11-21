@@ -17,17 +17,12 @@ from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain.memory import ConversationBufferMemory
 from langchain.prompts import PromptTemplate, ChatPromptTemplate
 
-# ========================
-# Config & Helpers
-# ========================
 
-dotenv.load_dotenv()  # Load GROQ_API_KEY from .env
+dotenv.load_dotenv() 
 
-# Make sure GROQ_API_KEY is set
 if not os.getenv("GROQ_API_KEY"):
     st.warning("⚠️ GROQ_API_KEY not found in environment. Set it in a .env file or environment variable.")
 
-# Text splitter (reuse)
 text_splitter = RecursiveCharacterTextSplitter(
     chunk_size=1000,
     chunk_overlap=200,
