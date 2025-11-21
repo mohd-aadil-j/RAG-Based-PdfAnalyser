@@ -91,7 +91,7 @@ def build_qa_chain(vectordb, memory):
         "rephrase the follow-up question to be a standalone question that includes "
         "relevant context from the history. Keep it concise and in the original language.\n\n"
         "Chat History:\n{chat_history}\n\n"
-        "Follow-Up Question: {question}\n\n"
+        "Follow-Up Question: {input}\n\n"
         "Standalone Question:"
     )
 
@@ -109,7 +109,7 @@ Context:
 {context}
 
 Question:
-{question}
+{input}
 
 Answer:"""
     )
