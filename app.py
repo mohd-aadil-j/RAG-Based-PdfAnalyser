@@ -13,8 +13,9 @@ from langchain_community.vectorstores import Chroma
 
 from langchain.chains.history_aware_retriever import create_history_aware_retriever
 from langchain.chains.retrieval import create_retrieval_chain
+from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain.memory import ConversationBufferMemory
-from langchain.prompts import PromptTemplate
+from langchain.prompts import PromptTemplate, ChatPromptTemplate
 
 # ========================
 # Config & Helpers
@@ -96,7 +97,7 @@ def build_qa_chain(vectordb, memory):
     )
 
     # Grounded answer prompt
-    answer_prompt = PromptTemplate.from_template(
+    answer_prompt = ChatPromptTemplate.from_template(
         """You are a helpful AI tutor for college students.
 
 Use ONLY the following context from the documents to answer the question.
@@ -115,7 +116,8 @@ Answer:"""
     )
 
     history_aware_retriever = create_history_aware_retriever(llm, retriever, condense_question_prompt)
-    qa_chain = create_retrieval_chain(history_aware_retriever, combine_docs_chain_kwargs={"prompt": answer_prompt})
+    question_answer_chain = create_stuff_documents_chain(llm, answer_prompt)
+    qa_chain = create_retrieval_chain(history_aware_retriever, question_answer_chain)
     return qa_chain
 
 
