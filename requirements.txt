@@ -1,0 +1,10 @@
+langchain>=0.1.0
+langchain-community>=0.0.20
+langchain-text-splitters>=0.0.1
+langchain-groq>=0.1.0
+langchain-huggingface>=0.0.1
+chromadb>=0.4.22
+pypdf>=3.17.0
+python-dotenv>=1.0.0
+
+

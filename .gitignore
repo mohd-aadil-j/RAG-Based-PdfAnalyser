@@ -1,0 +1,28 @@
+# Environment variables
+.env
+
+# Vector store
+chroma_db/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Data files (optional - uncomment if you don't want to commit PDFs)
+# data/*.pdf
+
+# OS
+.DS_Store
+Thumbs.db
