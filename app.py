@@ -4,7 +4,12 @@ import tempfile
 import dotenv
 import streamlit as st
 
-from langchain_community.document_loaders import PyPDFLoader
+from langchain_community.document_loaders import (
+    PyPDFLoader,
+    UnstructuredImageLoader,
+    UnstructuredPowerPointLoader,
+    Docx2txtLoader,
+)
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 from langchain_groq import ChatGroq
@@ -28,22 +33,49 @@ text_splitter = RecursiveCharacterTextSplitter(
     chunk_overlap=200,
 )
 
+SUPPORTED_EXTENSIONS = {
+    ".pdf": "pdf",
+    ".png": "image",
+    ".jpg": "image",
+    ".jpeg": "image",
+    ".pptx": "pptx",
+    ".docx": "docx",
+}
+
+
+def is_supported_file_type(filename: str) -> bool:
+    return os.path.splitext(filename.lower())[1] in SUPPORTED_EXTENSIONS
+
+
 def load_docs_from_uploaded_files(uploaded_files):
-    """Save uploaded PDFs to temp files and load them as LangChain documents."""
+    """Save uploaded files to temp storage and load them as LangChain documents."""
     docs = []
     for uploaded_file in uploaded_files:
-        if uploaded_file.name.lower().endswith(".pdf"):
-            # Save to a temp file so PyPDFLoader can read it
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
-                tmp_file.write(uploaded_file.read())
-                tmp_path = tmp_file.name
+        filename = uploaded_file.name.lower()
+        suffix = os.path.splitext(filename)[1]
 
+        if suffix not in SUPPORTED_EXTENSIONS:
+            continue
+
+        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp_file:
+            tmp_file.write(uploaded_file.read())
+            tmp_path = tmp_file.name
+
+        if suffix == ".pdf":
             loader = PyPDFLoader(tmp_path)
-            file_docs = loader.load()
-            # Add source metadata as the original uploaded filename
-            for d in file_docs:
-                d.metadata["source"] = uploaded_file.name
-            docs.extend(file_docs)
+        elif suffix in {".png", ".jpg", ".jpeg"}:
+            loader = UnstructuredImageLoader(tmp_path)
+        elif suffix == ".pptx":
+            loader = UnstructuredPowerPointLoader(tmp_path)
+        elif suffix == ".docx":
+            loader = Docx2txtLoader(tmp_path)
+        else:
+            continue
+
+        file_docs = loader.load()
+        for d in file_docs:
+            d.metadata["source"] = uploaded_file.name
+        docs.extend(file_docs)
 
     return docs
 
@@ -125,7 +157,7 @@ st.title("📚 Campus Knowledge Assistant (RAG + LangChain + Groq)")
 
 st.markdown(
     """
-Upload your **college PDFs** (notes, syllabus, question papers) and ask questions.
+Upload your **college study materials** such as PDFs, images, DOCX files, and PPTX slides.
 The assistant uses **RAG (Retrieval-Augmented Generation)** with:
 - 🧠 Groq LLaMA 3.1 as the LLM  
 - 🔍 Chroma + sentence-transformers for semantic search  
@@ -136,8 +168,8 @@ The assistant uses **RAG (Retrieval-Augmented Generation)** with:
 # Sidebar – Upload & Process
 st.sidebar.header("📂 Document Setup")
 uploaded_files = st.sidebar.file_uploader(
-    "Upload one or more PDF files",
-    type=["pdf"],
+    "Upload one or more study files",
+    type=["pdf", "png", "jpg", "jpeg", "pptx", "docx"],
     accept_multiple_files=True,
 )
 
@@ -160,7 +192,7 @@ if "messages" not in st.session_state:
 
 def process_documents():
     if not uploaded_files:
-        st.warning("Please upload at least one PDF.")
+        st.warning("Please upload at least one supported file.")
         return
 
     with st.spinner("Processing documents... This may take a moment."):
@@ -187,7 +219,7 @@ if st.sidebar.button("⚙️ Process Documents"):
 st.subheader("💬 Ask Questions")
 
 if st.session_state.qa_chain is None:
-    st.info("Upload PDFs and click **Process Documents** to start.")
+    st.info("Upload study files and click **Process Documents** to start.")
 else:
     # Display previous messages
     for msg in st.session_state.messages:
