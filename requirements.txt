@@ -9,6 +9,8 @@ python-dotenv>=1.0.0
 unstructured>=0.16.0
 python-pptx>=1.0.0
 docx2txt>=0.8.0
+pdfminer.six>=20221105
 unstructured-inference
-
+Pillow
+pi_heif
 
